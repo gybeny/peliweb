@@ -8,3 +8,11 @@ The user wants an all-in-one website manager integrated into Pelican Panel, targ
 **Why:** The request is for managing actual websites on egg-created servers, not a separate hosting dashboard.
 
 **How to apply:** Keep native Pelican integration as the primary deliverable. A companion preview must clearly identify local sample data and never pretend to issue certificates, change DNS or control live servers. Do not claim real Pelican/Wings/ACME integration was verified without an actual connected test environment.
+
+## Plugin author
+
+A későbbi verziókban iHyro legyen az author a plugin adatainál.
+
+**Why:** the user asked.
+
+**How to apply:** Preserve `iHyro` as the plugin author in future releases and their downloadable packages.
