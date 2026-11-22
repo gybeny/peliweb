@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Code, Confirm, PageHeader, Panel } from "@/components/bits";
 import { useToast } from "@/hooks/use-toast";
 import { actions, getState, RELEASE, type State } from "@/lib/store";
+import { EggConfigurator } from "@/components/egg-configurator";
 
 const base = import.meta.env.BASE_URL;
 
@@ -31,7 +32,7 @@ export default function Settings() {
   const links = [
     { href: `${base}downloads/webnest-plugin.zip`, icon: Download, t: "Natív Pelican bővítmény", d: "webnest-plugin.zip · Pelican 1.0.0-rc.4" },
     { href: `${base}downloads/webnest-runtime.zip`, icon: Package, t: "Runtime csomag (kötelező)", d: "webnest-runtime.zip · Dockerfile, manager, Caddy példa" },
-    { href: `${base}downloads/egg-webnest.json`, icon: FileJson, t: "WebNest egg", d: "egg-webnest.json · nginx + PHP-FPM" },
+    { href: `${base}downloads/egg-webnest.json`, icon: FileJson, t: "WebNest egg sablon", d: "PLCN_v3 · runtime image beállítása kötelező" },
     { href: `${base}downloads/TELEPITES.md`, icon: BookOpen, t: "Telepítési útmutató", d: "TELEPITES.md" },
     { href: `${base}downloads/SHA256SUMS`, icon: Hash, t: "Ellenőrzőösszegek", d: "SHA256SUMS" },
   ];
@@ -50,19 +51,20 @@ export default function Settings() {
           </a>
         ))}
       </div>
+      <div className="mb-5"><EggConfigurator /></div>
       <div className="grid lg:grid-cols-2 gap-5">
         <Panel title="Telepítés a Pelican Panelre">
           <ol className="space-y-2 text-sm list-decimal pl-4 marker:text-primary marker:font-mono mb-4">
             <li>Építsd meg és töltsd fel a saját runtime image-et a <span className="font-mono">webnest-runtime.zip</span> Dockerfile-jából — kész image nincs publikálva.</li>
-            <li>Az <span className="font-mono">egg-webnest.json</span>-ban cseréld a <span className="font-mono">registry.example.org</span> image-et a sajátodra, <b>még az importálás és szerverlétrehozás előtt</b>.</li>
-            <li>Importáld az egg-et (Admin › Eggs).</li>
+            <li>A fenti űrlapon add meg az elkészített runtime image nevét, és töltsd le a beállított egget. A sablon példacíme önmagában nem működik.</li>
+            <li>Importáld az <span className="font-mono">egg-webnest-configured.json</span> fájlt (Admin › Eggs). Meglévő eggnél az adatokat frissítsd; szervert ne törölj.</li>
             <li>Importáld/telepítsd a bővítmény zipet (lásd parancs).</li>
             <li>A bővítmény admin beállításaiban válaszd ki az engedélyezett egg ID-kat.</li>
             <li>Opcionális: node-onként privát Caddy API hozzárendelés. A Caddy edge kezeli a 80/443-at, a Let's Encryptet és a HTTPS átirányítást; a konténer nginx + PHP-FPM 8.4 az allocation porton fut.</li>
             <li>Domainenként: TXT <span className="font-mono">_webnest-challenge.&lt;hosztnév&gt;</span> → runtime alkalmazás → nyugtázás frissítése → Caddy publikálás → élő tanúsítvány ellenőrzése.</li>
           </ol>
           <Code>{`cd /var/www/pelican
-unzip webnest-plugin.zip -d plugins/webnest
+unzip webnest-plugin.zip -d plugins
 php artisan p:plugin:install webnest`}</Code>
           <p className="text-[11px] text-muted-foreground mt-2">Kézi kicsomagolás után a <span className="font-mono">php artisan p:plugin:install webnest</span> parancs a helyes. Részletek: TELEPITES.md.</p>
           <p className="text-[11px] text-muted-foreground mt-1">A natív bővítmény felülete Filament alapú; ez a bemutató nem pixelpontos mása.</p>

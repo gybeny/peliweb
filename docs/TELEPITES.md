@@ -27,7 +27,7 @@ megjelenése nem teljesen azonos a bemutatóval.
 | --- | --- |
 | `webnest-plugin.zip` | Közvetlenül importálható `webnest/` pluginmappa |
 | `webnest-runtime.zip` | Dockerfile, Python supervisor, PHP-FPM konfiguráció, egg és Caddy példa |
-| `egg-webnest.json` | Importálható PTDL_v2 egg; az image nevét előbb cseréld ki |
+| `egg-webnest.json` | Natív PLCN_v3 egg **sablon**; saját runtime image nélkül nem futtatható |
 | `SHA256SUMS` | A csomagok ellenőrzőösszege |
 
 ## Felépítés
@@ -66,14 +66,26 @@ A PHP 8.4 minor ágon belüli hibajavításokat az image újraépítésével kap
 Az image buildelését/tesztelését és a rendszeres újraépítést neked kell
 elvégezned. Éles használatra ellenőrzött image digest rögzítése javasolt.
 
-Az `egg-webnest.json` `docker_images` mezőjében cseréld ki a példaképet a
-ténylegesen feltöltött image nevére. Privát registry esetén a Wings registry
-hozzáférését is állítsd be a saját infrastruktúrádon. A példacím nem működő
-letöltési hely.
+A build és push után generálj beállított egget a runtime csomagban mellékelt
+segéddel. A parancsban a példanevet a **ténylegesen feltöltött saját image
+nevére** kell cserélni:
+
+```bash
+python3 configure-egg.py --image registry.example.org/webnest/runtime:php84 \
+  --output egg-webnest-configured.json
+```
+
+A segéd szándékosan elutasítja a fenti `example.org` példacímet, amíg azt
+nem cseréled valós névre. Nem épít és nem publikál image-et, nem ellenőriz
+registry-hozzáférést. Alternatíva: a bemutató **Beállítások → Importálható
+egg előkészítése** űrlapja ugyanilyen beállított JSON-t készít.
+
+Privát registry esetén a Wings registry hozzáférését is állítsd be a saját
+infrastruktúrádon. A JSON átírása önmagában nem hozza létre az image-et.
 
 ## 2. Egg és szerver
 
-1. Pelican Admin → Eggs → Import: a módosított `egg-webnest.json`.
+1. Pelican Admin → Eggs → Import: az `egg-webnest-configured.json`.
 2. Hozz létre egy üres szervert ezzel az eggel.
 3. A fő allocation **1024–65535** közötti port legyen.
 4. Legalább 512 MB memória, 1 GB lemez és kezdetben 100% CPU ésszerű tesztalap.
@@ -81,9 +93,50 @@ letöltési hely.
 5. Indítsd el. A konzolon a `WebNest ready` üzenet jelzi a supervisor indulását,
    nem egy webhely külső elérhetőségét.
 
-Az egg telepítése csak üres könyvtárat és kezdő HTML-t készít. A plugin nem
+Az egg telepítése csak könyvtárakat és hiányzó kezdő HTML-t készít.
+Újratelepítéskor nem írja felül a meglévő weboldalfájlt vagy runtime állapotot.
+A plugin nem
 telepít WordPresst, nem frissít alkalmazást és nem módosít adatbázist.
 Más nginx/PHP egg csak külön adapterrel válik kompatibilissé.
+
+### Telepítési hiba elkülönítése logok nélkül
+
+Három külön lépésről van szó:
+
+1. **Egg import:** az rc4 a régi PTDL_v2 fájlt is átalakítja, így a korábbi
+   formátum önmagában nem bizonyított hiba. Az új csomag közvetlenül PLCN_v3,
+   stabil UUID-val és `startup_commands` mezővel. Már létező egg esetén az
+   Admin felületen annak **import/frissítés** műveletét használd; ne törölj
+   működő szervert, és új egg ID esetén ellenőrizd a plugin engedélylistáját.
+2. **Szerver telepítés:** külön, valós `alpine:3.22` image-ben futó `/bin/sh`
+   készíti elő a kötetet. Ehhez a node-nak el kell érnie a Docker Hubot.
+   Ha lefutott, a Pelican Fájlok között megjelenik
+   `webnest/INSTALLATION.txt`, benne siker/hiba és lépés. A fájl hiánya nem
+   bizonyít konkrét okot, de azt jelzi, hogy még a jelentésig sem jutott el.
+3. **Szerver indulás:** itt kell a saját WebNest runtime image. A korábbi
+   `registry.example.org/...` cím **nem létezik**, így változtatás nélkül
+   nem indítható a szerver. Az Alpine installer sikerétől ez független.
+
+A runtime nem helyettesíthető sima `php:8.4-fpm-alpine` vagy nginx image-dzsel:
+ezekből hiányoznak a WebNest fájljai és/vagy függőségei. Az installerimage-et
+viszont ne cseréld a Python ENTRYPOINT-tal rendelkező WebNest image-re:
+a Wings a shellt indítási argumentumként adja át, amit az image ENTRYPOINT-ja
+elfedne.
+
+Ha a node shelljéhez hozzáférsz, a két érintett image letöltése külön,
+szerverfájlok módosítása nélkül ellenőrizhető:
+
+```bash
+docker pull alpine:3.22
+# Csak a SAJÁT, létező image-neveddel:
+docker pull registry.example.org/webnest/runtime:php84
+```
+
+Meglévő szervernél a runtime image-et a szerver Startup beállításában is
+frissíteni kell: az egg újraimportálása nem feltétlenül módosítja a már
+létrehozott szerver kiválasztott image-ét. A plugin ZIP kézi kicsomagolása
+`-d plugins`, nem `-d plugins/webnest`, mert a ZIP már tartalmazza a
+`webnest/` legfelső mappát.
 
 ## 3. Plugin telepítése
 

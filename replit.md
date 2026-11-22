@@ -27,7 +27,7 @@ Natív webhosting plugin Pelican Panel 1.0.0-rc.4-hez, saját nginx/PHP runtime-
 ## Where things live
 
 - `plugins/webnest/` — distributable native PHP plugin, Blade page, migrations and permissions
-- `runtime/` — source-only Wings image, protocol-v1 supervisor and importable egg
+- `runtime/` — source-only Wings image, protocol-v1 supervisor, PLCN_v3 egg template and image configurator
 - `edge/Caddyfile.example` — private Caddy edge bootstrap (staging ACME)
 - `docs/TELEPITES.md` — Hungarian installation guide, limitations and staging checklist
 - `artifacts/webnest/` — React companion demo, browser-local sample data only
@@ -39,6 +39,7 @@ Natív webhosting plugin Pelican Panel 1.0.0-rc.4-hez, saját nginx/PHP runtime-
 - The deliverable is the native plugin; the React app is explicitly only a demo and download surface, never a replacement panel.
 - No live Pelican/Wings/DNS/ACME environment is attached here. Do not call the plugin production-ready or claim verified installation.
 - Runtime image must be built/pushed by the operator. The egg's `registry.example.org` image is explicitly a placeholder, not a published image.
+- Egg installation uses a separate Alpine image; success there does not prove the runtime image exists. Use the settings-page configurator or `runtime/configure-egg.py` before import.
 - Caddy admin must stay on a private network/VPN with firewall restrictions. Edge→allocation must also use a trusted network.
 - Domain reservations and plugin data survive uninstall/soft deletion to avoid orphaned edge routes being reassigned silently.
 
