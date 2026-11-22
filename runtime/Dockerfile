@@ -11,7 +11,7 @@ RUN apk add --no-cache nginx python3 ca-certificates icu-libs libzip \
     && mkdir -p /opt/webnest /home/container \
     && chown -R container:container /home/container
 
-COPY manager.py php-fpm.conf /opt/webnest/
+COPY manager.py configuration.py selftest.py /opt/webnest/
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container

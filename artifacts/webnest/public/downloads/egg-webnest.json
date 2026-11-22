@@ -23,5 +23,17 @@
       "entrypoint": "/bin/sh"
     }
   },
-  "variables": []
+  "variables": [
+    { "name": "nginx worker folyamatok", "description": "nginx worker folyamatok száma; induláskor automatikusan érvényesül.", "env_variable": "WEBNEST_NGINX_WORKERS", "default_value": "1", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:1|max:8" },
+    { "name": "nginx kapcsolatok workerenként", "description": "A konténer erőforráskeretein belüli kapcsolatszám.", "env_variable": "WEBNEST_NGINX_CONNECTIONS", "default_value": "1024", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:128|max:16384" },
+    { "name": "HTTP keepalive (másodperc)", "description": "0 kikapcsolja a tartós HTTP kapcsolatot.", "env_variable": "WEBNEST_KEEPALIVE_TIMEOUT", "default_value": "65", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:0|max:300" },
+    { "name": "PHP párhuzamos folyamatok", "description": "PHP-FPM max_children. A túl magas érték memóriahiányt okozhat.", "env_variable": "WEBNEST_PHP_CHILDREN", "default_value": "8", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:1|max:128" },
+    { "name": "PHP kérések folyamatonként", "description": "Ennyi kérés után a PHP worker újraindul.", "env_variable": "WEBNEST_PHP_REQUESTS", "default_value": "500", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:1|max:100000" },
+    { "name": "PHP üresjárati idő (másodperc)", "description": "Ondemand PHP worker leállításának ideje.", "env_variable": "WEBNEST_PHP_IDLE_TIMEOUT", "default_value": "10", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:1|max:300" },
+    { "name": "PHP alap memória (MB)", "description": "Alapérték; a webhely saját PHP beállítása felülírhatja.", "env_variable": "WEBNEST_PHP_MEMORY_MB", "default_value": "256", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:16|max:4096" },
+    { "name": "PHP alap feltöltési korlát (MB)", "description": "Alapérték; a webhely saját PHP beállítása felülírhatja.", "env_variable": "WEBNEST_PHP_UPLOAD_MB", "default_value": "64", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:1|max:2048" },
+    { "name": "PHP futásidő (másodperc)", "description": "A PHP kérések alapértelmezett max_execution_time értéke.", "env_variable": "WEBNEST_PHP_EXECUTION_TIME", "default_value": "120", "user_viewable": true, "user_editable": true, "rules": "required|integer|min:1|max:3600" },
+    { "name": "nginx hibakeresési részletesség", "description": "error, warn, notice vagy info. A hibák a szerverkonzolban jelennek meg.", "env_variable": "WEBNEST_LOG_LEVEL", "default_value": "warn", "user_viewable": true, "user_editable": true, "rules": "required|string|in:error,warn,notice,info" },
+    { "name": "HTTP hozzáférési napló", "description": "1 = naplózás a webnest/run/access.log fájlba, 0 = kikapcsolva. Automatikus méretkorlátozás.", "env_variable": "WEBNEST_ACCESS_LOG", "default_value": "1", "user_viewable": true, "user_editable": true, "rules": "required|integer|in:0,1" }
+  ]
 }

@@ -27,7 +27,7 @@ Natív webhosting plugin Pelican Panel 1.0.0-rc.4-hez, saját nginx/PHP runtime-
 ## Where things live
 
 - `plugins/webnest/` — distributable native PHP plugin, Blade page, migrations and permissions
-- `runtime/` — source-only Wings image, protocol-v1 supervisor, PLCN_v3 egg template and image configurator
+- `runtime/` — Wings image source, automatic configuration generator, non-root supervisor, host setup script with isolated image smoke test, PLCN_v3 eggs
 - `edge/Caddyfile.example` — private Caddy edge bootstrap (staging ACME)
 - `docs/TELEPITES.md` — Hungarian installation guide, limitations and staging checklist
 - `artifacts/webnest/` — React companion demo, browser-local sample data only
@@ -54,7 +54,7 @@ The user asked for a native all-in-one Pelican plugin, targets their installed 1
 ## Gotchas
 
 - Bundle regeneration is required after native/runtime/doc edits.
-- First public release is `0.1.0` preview for staging, not verified on an installed Pelican instance.
+- Current release is `0.1.1` preview for staging, not verified on an installed Pelican instance. Real non-root nginx/PHP processes are checked locally; image-level smoke tests run on the operator's Docker host via setup.sh.
 - Only PHP 8.4 is currently included. Only exact domains (no wildcard) and loopback HTTP proxy targets are supported.
 - Restore Caddy with `--resume` after first publish, or re-publish routes after loading a static config.
 - Start the frontend through its managed workflow, not manually.

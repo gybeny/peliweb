@@ -53,12 +53,17 @@ export function EggConfigurator() {
   }
 
   return (
-    <Panel title="Importálható egg előkészítése">
+    <Panel title="Automatikus runtime telepítés és beállítás">
       <p className="text-sm text-muted-foreground mb-3">
-        A korábbi egg runtime-címe csak példa volt, nem letölthető image. Előbb készítsd el
-        a runtime csomag Dockerfile-jából a saját image-edet. Registry esetén fel is kell töltened;
-        helyi Wings image-hez lásd az alábbi útmutatót. Itt csak image-nevet adj meg, ne jelszót.
+        A script elkészíti és ellenőrzi a runtime-ot. Az nginx és PHP konfigurációját minden induláskor
+        automatikusan kezeli; kézi konfigurációszerkesztés nem kell. A már korábban megépített image-et
+        egyszer frissíteni kell az alábbi scripttel.
       </p>
+      <details className="mb-3">
+        <summary className="text-sm cursor-pointer font-medium">Haladó: egyedi registry vagy image használata</summary>
+        <p className="text-xs text-muted-foreground my-3">
+          Csak már elkészített WebNest image-nevet adj meg, ne jelszót. A korábbi registry.example.org példacím nem működik.
+        </p>
       <form onSubmit={download} className="space-y-3">
         <label htmlFor="webnest-runtime-image" className="text-sm font-medium block">Elkészített WebNest runtime image</label>
         <Input id="webnest-runtime-image" value={image} onChange={(e) => setImage(e.target.value)}
@@ -67,26 +72,38 @@ export function EggConfigurator() {
         {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
         {message && <p className="text-sm text-muted-foreground" role="status">{message}</p>}
       </form>
+      </details>
       <p className="text-xs text-muted-foreground mt-3">
         A külön telepítőimage Alpine. A telepítés sikere nem jelenti azt, hogy a saját futtatóimage is elérhető.
         Ezt a registryben és a Wings node-on külön kell biztosítani.
       </p>
       <div className="mt-5 border-t pt-4">
-        <h3 className="font-semibold text-sm mb-2">SSH-s javítás külön registry nélkül</h3>
+        <h3 className="font-semibold text-sm mb-2">Automatikus telepítés vagy frissítés a Wings gépen</h3>
         <p className="text-sm text-muted-foreground mb-3">
           Töltsd le és másold a runtime ZIP-et a szervert futtató Wings gépre. Az SSH terminálban,
-          a ZIP mappájából futtasd az alábbi parancsokat. Ez image-et épít, weboldalfájlokat nem töröl.
-          Docker, unzip, internet és elegendő szabad tárhely szükséges.
+          a ZIP mappájából futtasd az alábbi parancsokat. Docker, unzip, internet és elegendő szabad tárhely szükséges.
+          Rootként a sudo elhagyható.
         </p>
         <Code>{`builddir="$(mktemp -d /tmp/webnest-build.XXXXXX)"
 unzip -n webnest-runtime.zip -d "$builddir" &&
-sudo docker build --pull -t webnest-runtime:php84 "$builddir/runtime" &&
-sudo docker image inspect webnest-runtime:php84 --format '{{.Id}}'`}</Code>
+sudo sh "$builddir/runtime/setup.sh"`}</Code>
+        <p className="text-sm text-muted-foreground mt-3">
+          A script külön image-et épít, ideiglenes köteten teszteli az nginx/PHP indulását,
+          a PHP-kiszolgálást és a hibás konfiguráció elutasítását. Csak sikeres teszt után cseréli
+          a helyi image taget. A futó szervereket és a weboldalfájlokat nem módosítja.
+        </p>
         <p className="text-sm text-muted-foreground mt-3">
           Sikeres build után frissítsd a meglévő egget a <a className="underline" href={`${import.meta.env.BASE_URL}downloads/egg-webnest-local.json`} download>helyi Wings eggből</a>,
           majd a szerver Startup oldalán válaszd a <code>~webnest-runtime:php84</code> image-et.
+          Ha már ezt használod, a sikeres scriptfutás után indítsd újra a szervert.
           A ~ jel a Pelicanben kell, a Docker build tagjében nem. A Wings így nem próbálja
           registryből letölteni. Meglévő szervert ne törölj és ne telepíts újra emiatt.
+        </p>
+        <p className="text-sm text-muted-foreground mt-3">
+          Az új egg 11 működési beállítást jelenít meg a Pelican Startup oldalán: nginx workerek,
+          kapcsolatszám, keepalive, naplózás; PHP folyamatok, újraindítási és üresjárati határok,
+          memória, feltöltés és futásidő. Ezek újraindításkor automatikusan érvényesülnek.
+          A webhelyenkénti domaineket, SSL-t, fejléceket és proxyt továbbra is a natív pluginban állíthatod.
         </p>
         <p className="text-xs text-muted-foreground mt-2">
           Másik node-ra költözéskor ott is meg kell építeni az image-et. Ne töröld Docker image

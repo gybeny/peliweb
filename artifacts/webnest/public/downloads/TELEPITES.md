@@ -1,6 +1,6 @@
 # WebNest – Pelican Webhelykezelő
 
-**0.1.0 előzetes kiadás · Pelican Panel 1.0.0-rc.4 · tesztkörnyezetbe**
+**0.1.1 előzetes kiadás · Pelican Panel 1.0.0-rc.4 · tesztkörnyezetbe**
 
 Ez egy natív PHP/Laravel/Filament plugin, nem a panelhez távolról csatlakozó
 React alkalmazás. A hozzá tartozó böngészős bemutató csak helyi mintadatokat
@@ -27,7 +27,7 @@ megjelenése nem teljesen azonos a bemutatóval.
 | Fájl | Tartalom |
 | --- | --- |
 | `webnest-plugin.zip` | Közvetlenül importálható `webnest/` pluginmappa |
-| `webnest-runtime.zip` | Dockerfile, Python supervisor, PHP-FPM konfiguráció, egg és Caddy példa |
+| `webnest-runtime.zip` | Automatizált telepítő/frissítő, image működési teszt, konfigurációgenerátor, egg és Caddy példa |
 | `egg-webnest.json` | Natív PLCN_v3 egg **sablon**; saját runtime image nélkül nem futtatható |
 | `egg-webnest-local.json` | Wings helyi image: `~webnest-runtime:php84`; előbb ugyanazon a node-on kell buildelni |
 | `SHA256SUMS` | A csomagok ellenőrzőösszege |
@@ -62,13 +62,21 @@ a gépre, majd abba a mappába lépj, ahol a ZIP található:
 ```bash
 builddir="$(mktemp -d /tmp/webnest-build.XXXXXX)"
 unzip -n webnest-runtime.zip -d "$builddir" &&
-sudo docker build --pull -t webnest-runtime:php84 "$builddir/runtime" &&
-sudo docker image inspect webnest-runtime:php84 --format '{{.Id}}'
+sudo sh "$builddir/runtime/setup.sh"
 ```
 
 Docker, unzip, internetkapcsolat és elegendő szabad tárhely szükséges.
 A csomag külön ideiglenes mappába kerül; a parancsok nem törlik a szerver
 weboldalfájljait. A build erőforrást és lemezterületet használ.
+Rootként belépve a `sudo` elhagyható.
+
+A script egy külön jelölt image-et épít, és **nem-root felhasználóval**,
+ideiglenes köteten, külső hálózat és írható rendszerlemez nélkül ellenőrzi:
+nginx/PHP indulás, HTTP válasz, PHP-végrehajtás, új konfiguráció alkalmazása
+és hibás konfiguráció elutasítása a működő webhely megtartásával.
+Csak sikeres teszt után állítja át a `webnest-runtime:php84` taget.
+Hibánál a régi tag megmarad. Nem módosít futó szervert, hostszolgáltatást
+vagy weboldalkötetet, és nem használ Docker socketet a webhelykonténerben.
 
 **Csak sikeres build után:**
 
@@ -77,7 +85,10 @@ weboldalfájljait. A build erőforrást és lemezterületet használ.
    `runtime/egg-webnest-local.json`.
 2. A már létező szerver **Startup / Indítási beállítások → Docker Image**
    mezőjében válaszd ki pontosan ezt: `~webnest-runtime:php84`.
-3. Indítsd a szervert. Emiatt ne töröld és ne telepítsd újra.
+3. Indítsd/indítsd újra a szervert. Emiatt ne töröld és ne telepítsd újra.
+   Ha már a `~webnest-runtime:php84` image-et használod, a script után csak
+   a Pelicanből történő újraindítás kell. Az új Startup mezőkhöz az egg
+   frissítése szükséges, de a hiányzó változók biztonságos alapértékkel működnek.
 
 A **Docker build tagje `webnest-runtime:php84`, a Pelicanben beállítandó
 érték `~webnest-runtime:php84`**. A `~` nem része a Docker image nevének:
@@ -126,6 +137,60 @@ egg előkészítése** űrlapja ugyanilyen beállított JSON-t készít.
 
 Privát registry esetén a Wings registry hozzáférését is állítsd be a saját
 infrastruktúrádon. A JSON átírása önmagában nem hozza létre az image-et.
+
+### Automatikus konfiguráció és az új Startup beállítások
+
+A runtime minden induláskor előkészíti a saját írható könyvtárait és mind
+az öt nginx temp útvonalat: client, proxy, FastCGI, uWSGI és SCGI.
+Az Alpine utóbbi két alapútvonala root tulajdonú rendszerkönyvtárra mutathat,
+ami nem-root konténerben indulási hibát okoz. A javítás a régi WebNest
+konfigurációt automatikusan migrálja, és annak mentését megőrzi.
+Kézi nginx/PHP fájlszerkesztés nem szükséges és nem támogatott: a script
+által kezelt beállítások induláskor újragenerálódnak.
+
+A natív pluginból küldött konfigurációra is ugyanazok az ellenőrzések
+vonatkoznak. Az allocation portjának változását automatikusan átvezeti.
+Ha egy mentett konfiguráció hibás, csak ellenőrzött korábbi működő
+konfigurációra áll vissza, jól látható figyelmeztetéssel és a hibás fájl
+megőrzésével; ügyfél-webhelyet nem cserél le csendben üres kezdőlapra.
+
+Az egg frissítése után a Pelican **Startup** oldalán állítható értékek:
+
+| Változó | Alapérték | Megengedett |
+| --- | --- | --- |
+| `WEBNEST_NGINX_WORKERS` | 1 | 1–8 |
+| `WEBNEST_NGINX_CONNECTIONS` | 1024 | 128–16384 |
+| `WEBNEST_KEEPALIVE_TIMEOUT` | 65 s | 0–300 |
+| `WEBNEST_PHP_CHILDREN` | 8 | 1–128 |
+| `WEBNEST_PHP_REQUESTS` | 500 | 1–100000 |
+| `WEBNEST_PHP_IDLE_TIMEOUT` | 10 s | 1–300 |
+| `WEBNEST_PHP_MEMORY_MB` | 256 MB | 16–4096 |
+| `WEBNEST_PHP_UPLOAD_MB` | 64 MB | 1–2048 |
+| `WEBNEST_PHP_EXECUTION_TIME` | 120 s | 1–3600 |
+| `WEBNEST_LOG_LEVEL` | warn | error / warn / notice / info |
+| `WEBNEST_ACCESS_LOG` | 1 | 0 / 1 |
+
+Újraindítás szükséges; minden értéket a runtime is ellenőriz, nem csak a
+panel űrlapja. A webhely saját PHP memória/feltöltési beállítása elsőbbséget
+élvez az itteni alapértékkel szemben. A konténer RAM/CPU/port korlátait ezek
+nem írják felül: túl sok PHP folyamatot ne engedélyezz kevés memóriával.
+A domainek, SSL, biztonsági fejlécek, IP-szabályok és proxy webhelyenként
+a natív plugin meglévő felületén állíthatók.
+
+A `WebNest ready` csak akkor jelenik meg, ha az nginx/PHP konfiguráció
+ellenőrzése sikeres, mindkét folyamat fut és a helyi HTTP/PHP-FPM végpont
+elérhető. Ez nem külső DNS/SSL-elérhetőségi teszt. Hibánál a konkrét nginx
+vagy PHP hiba megjelenik a konzolban és a `webnest/runtime-status.json`
+fájlban, nem csak egy Python `CalledProcessError`.
+
+A hozzáférési és PHP naplók a `webnest/run/` könyvtárban találhatók;
+5 MB fölött a script legfeljebb az előző 1 MB-ot menti, és kiüríti az
+aktuális fájlt. Ne tölts fel titkokat a naplókba.
+
+**Frissítési korlát:** a régi, már megépített image a benne lévő régi
+programot futtatja, ezért ezt a javítást egyszer a fenti frissítőscript
+segítségével át kell vennie. A plugin nem kap host root/Docker-jogosultságot,
+így nem ígér távoli, engedély nélküli image-frissítést.
 
 ## 2. Egg és szerver
 

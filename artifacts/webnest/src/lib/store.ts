@@ -24,7 +24,7 @@ export interface State { sites: Site[]; domains: Domain[]; sampleCerts: SampleCe
 
 const KEY = "webnest-demo-v2";
 export const PHP_VERSION = "8.4";
-export const RELEASE = "0.1.0 előzetes · tesztkörnyezetbe";
+export const RELEASE = "0.1.1 előzetes · tesztkörnyezetbe";
 export const HEADER_NAMES = ["X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy", "Content-Security-Policy", "Cache-Control"];
 export const ROOT_RE = /^\/home\/container\/sites(\/[A-Za-z0-9_-]+)+$/;
 export const RATE_MIN = 1;

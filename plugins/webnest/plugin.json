@@ -2,7 +2,7 @@
   "id": "webnest",
   "name": "WebNest – Webhelykezelő",
   "author": "iHyro",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Webhelyek, domainek, nginx/PHP, biztonság és Caddy-alapú SSL kezelése. Előzetes kiadás, tesztkörnyezetbe.",
   "category": "plugin",
   "namespace": "WebNest",

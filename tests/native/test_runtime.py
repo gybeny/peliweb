@@ -3,9 +3,11 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+sys.path.insert(0, str(Path(__file__).parents[2] / "runtime"))
 
 spec = importlib.util.spec_from_file_location("manager", Path(__file__).parents[2] / "runtime/manager.py")
 manager = importlib.util.module_from_spec(spec)
@@ -32,7 +34,7 @@ class RuntimeProtocolTests(unittest.TestCase):
         self.process.poll.return_value = None
         self.request = {
             "protocol": 1, "revision": "11111111-1111-4111-a111-111111111111",
-            "nginx": "candidate config", "roots": ["sites/test/public"],
+            "nginx": "worker_processes 1;\nevents { worker_connections 1024; }\nhttp {\nserver { listen 8080; return 404; }\n}\n", "roots": ["sites/test/public"],
         }
 
     def test_success_requires_nginx_test_and_reload(self):

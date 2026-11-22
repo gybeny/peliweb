@@ -1,1 +1,2 @@
 - [Pelican product scope](pelican-product-scope.md) — native rc4 plugin is the deliverable; the browser demo must never imply live server control.
+- [Runtime automation](runtime-automation.md) — scripts must generate configuration automatically; expose supported settings in Pelican instead of requiring manual edits.

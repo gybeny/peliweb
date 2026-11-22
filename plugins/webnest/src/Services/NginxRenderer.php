@@ -81,6 +81,6 @@ class NginxRenderer
         $trusted .= "}\n";
         $scheme = "map \"\$webnest_trusted_proxy:\$http_x_forwarded_proto\" \$webnest_scheme {\ndefault \$scheme;\n\"1:https\" https;\n\"1:http\" http;\n}\nmap \$webnest_scheme \$webnest_https { default ''; https on; }\n";
         // A default vhost prevents arbitrary Host headers reaching a customer's site.
-        return "worker_processes 1;\npid nginx.pid;\nerror_log stderr warn;\nevents { worker_connections 1024; }\nhttp {\ninclude mime.types;\ndefault_type application/octet-stream;\nserver_tokens off;\naccess_log /dev/stdout;\nclient_body_temp_path client_temp;\nproxy_temp_path proxy_temp;\nfastcgi_temp_path fastcgi_temp;\n$realIp\n$trusted\n$scheme\nmap \$http_upgrade \$connection_upgrade { default upgrade; '' close; }\n$zones\nserver { listen $port default_server; server_name _; return 404; }\n$servers}\n";
+        return "worker_processes 1;\npid nginx.pid;\nerror_log stderr warn;\nevents { worker_connections 1024; }\nhttp {\ninclude mime.types;\ndefault_type application/octet-stream;\nserver_tokens off;\naccess_log access.log;\nclient_body_temp_path client_temp;\nproxy_temp_path proxy_temp;\nfastcgi_temp_path fastcgi_temp;\nuwsgi_temp_path uwsgi_temp;\nscgi_temp_path scgi_temp;\n$realIp\n$trusted\n$scheme\nmap \$http_upgrade \$connection_upgrade { default upgrade; '' close; }\n$zones\nserver { listen $port default_server; server_name _; return 404; }\n$servers}\n";
     }
 }
