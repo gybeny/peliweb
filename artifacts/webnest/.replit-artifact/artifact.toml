@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "WebNest · Pelican Webhelykezelő"
+description = "A native Pelican Panel web hosting plugin and an interactive Hungarian-language local preview for managing sites, domains, SSL, security headers and reverse proxies. Preview data is local and never represents live infrastructure."
+version = "1.0.0"
+id = "artifacts/webnest"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22550
+
+[services.development]
+run = "pnpm --filter @workspace/webnest run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/webnest", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/webnest/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22550"
+BASE_PATH = "/"

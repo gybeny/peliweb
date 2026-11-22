@@ -1,0 +1,60 @@
+import { type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import NotFound from '@/pages/not-found';
+import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { Layout } from '@/components/layout';
+import Overview from '@/pages/overview';
+import Sites from '@/pages/sites';
+import SiteDetail from '@/pages/site-detail';
+import Domains from '@/pages/domains';
+import Ssl from '@/pages/ssl';
+import Security from '@/pages/security';
+import Proxy from '@/pages/proxy';
+import Activity from '@/pages/activity';
+import Settings from '@/pages/settings';
+
+const queryClient = new QueryClient();
+
+function Router() {
+  return (
+    <Layout>
+      <RoutedErrorBoundary>
+        <Switch>
+          <Route path="/" component={Overview} />
+          <Route path="/webhelyek" component={Sites} />
+          <Route path="/webhelyek/:id" component={SiteDetail} />
+          <Route path="/domainek" component={Domains} />
+          <Route path="/ssl" component={Ssl} />
+          <Route path="/biztonsag" component={Security} />
+          <Route path="/proxy" component={Proxy} />
+          <Route path="/naplo" component={Activity} />
+          <Route path="/beallitasok" component={Settings} />
+          <Route component={NotFound} />
+        </Switch>
+      </RoutedErrorBoundary>
+    </Layout>
+  );
+}
+
+function RoutedErrorBoundary({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
+  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;

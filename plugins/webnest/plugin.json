@@ -1,0 +1,13 @@
+{
+  "id": "webnest",
+  "name": "WebNest – Webhelykezelő",
+  "author": "WebNest",
+  "version": "0.1.0",
+  "description": "Webhelyek, domainek, nginx/PHP, biztonság és Caddy-alapú SSL kezelése. Előzetes kiadás, tesztkörnyezetbe.",
+  "category": "plugin",
+  "namespace": "WebNest",
+  "class": "WebNestPlugin",
+  "panels": ["admin", "server"],
+  "panel_version": "1.0.0-rc.4",
+  "api_version": 1
+}

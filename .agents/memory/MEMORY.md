@@ -1,0 +1,1 @@
+- [Pelican product scope](pelican-product-scope.md) — native rc4 plugin is the deliverable; the browser demo must never imply live server control.

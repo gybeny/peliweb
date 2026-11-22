@@ -1,0 +1,26 @@
+{
+  "_comment": "WebNest protocol 1. Import into Pelican and replace the image name with your own built/pushed image. No image is published by this project.",
+  "meta": { "version": "PTDL_v2", "update_url": null },
+  "exported_at": "2026-11-22T00:00:00+00:00",
+  "name": "WebNest · nginx + PHP 8.4",
+  "author": "webnest@example.org",
+  "description": "WebNest plugin runtime: PHP 8.4-FPM, nginx, Python supervisor. Requires building runtime/Dockerfile and changing the Docker image field. Not a drop-in egg for an arbitrary PHP image.",
+  "features": [],
+  "docker_images": { "WebNest PHP 8.4 (build and replace)": "registry.example.org/webnest/runtime:php84" },
+  "file_denylist": [],
+  "startup": "webnest",
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\":\"WebNest ready\"}",
+    "logs": "{}",
+    "stop": "^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/sh\nset -eu\nmkdir -p /mnt/server/sites/default/public /mnt/server/webnest\nprintf '%s\\n' '<!doctype html><html lang=\"hu\"><meta charset=\"utf-8\"><title>WebNest</title><h1>A WebNest környezet elkészült.</h1><p>Hozz létre egy webhelyet a Pelican Webhelykezelő menüjében.</p></html>' > /mnt/server/sites/default/public/index.html\n",
+      "container": "alpine:3.22",
+      "entrypoint": "sh"
+    }
+  },
+  "variables": []
+}

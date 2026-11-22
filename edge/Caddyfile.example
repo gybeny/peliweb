@@ -1,0 +1,14 @@
+# Dedicated edge. The plugin preserves this config and manages two HTTP servers
+# named webnest_http / webnest_https through the private admin API.
+{
+    # Replace with this edge machine's VPN/private IP.
+    # Firewall port 2019: allow ONLY the Pelican panel private IP.
+    admin 10.0.0.2:2019
+    # ACME issuer, staging/production mode and contact are set explicitly by
+    # the plugin's WebNest settings and /load payload, not by this empty bootstrap.
+    # The plugin defaults to staging. Do not disable staging before testing DNS.
+}
+
+# Start Caddy with this config once. After the plugin's first /load, Caddy's
+# autosave contains the generated routes. Restart with --resume thereafter.
+# Do NOT start with an empty Caddyfile on every reboot: that erases live routes.
