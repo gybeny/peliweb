@@ -13,11 +13,12 @@ import sys
 def validate_image(image: str) -> str:
     if image != image.strip() or any(c.isspace() for c in image) or "://" in image:
         raise ValueError("Image-nevet adj meg, protokoll, jelszó és szóköz nélkül.")
-    if not re.fullmatch(r"[a-z0-9][a-z0-9._:/-]*(?:@sha256:[a-f0-9]{64})?", image):
+    reference = image[1:] if image.startswith("~") else image
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._:/-]*(?:@sha256:[a-f0-9]{64})?", reference):
         raise ValueError("Érvénytelen image-hivatkozás.")
     if "@" not in image and ":" not in image.rsplit("/", 1)[-1]:
         raise ValueError("Adj meg kifejezett taget vagy sha256 digestet.")
-    host = image.split("/", 1)[0].split(":", 1)[0]
+    host = reference.split("/", 1)[0].split(":", 1)[0]
     if host == "example" or host.endswith((".example", ".example.org", ".example.com", ".example.net")) or host in ("example.org", "example.com", "example.net"):
         raise ValueError("A példacím nem használható. Előbb építsd meg és töltsd fel a saját WebNest image-et.")
     return image
@@ -27,7 +28,11 @@ def configure(template: dict, image: str) -> dict:
     image = validate_image(image)
     # Roundtrip clone so repeated use cannot mutate the source template.
     egg = json.loads(json.dumps(template))
-    egg["_comment"] = "Configured WebNest egg. Registry availability and Wings pull access must be checked by the operator."
+    egg["_comment"] = (
+        f"Local Wings image: build {image[1:]} on the SAME node first. The leading ~ disables registry pulling; it is not part of the Docker build tag."
+        if image.startswith("~") else
+        "Configured WebNest egg. Registry availability and Wings pull access must be checked by the operator."
+    )
     egg["docker_images"] = {"WebNest PHP 8.4": image}
     egg["description"] = "WebNest · PHP 8.4-FPM + nginx + protocol-v1 supervisor. Saját WebNest runtime szükséges; tetszőleges PHP image nem kompatibilis."
     return egg
@@ -35,7 +40,7 @@ def configure(template: dict, image: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--image", required=True, help="Az elkészített WebNest runtime teljes image-neve taggel/digesttel.")
+    parser.add_argument("--image", required=True, help="Az elkészített runtime image taggel/digesttel; helyi Wings image-hez ~ előtaggal.")
     parser.add_argument("--output", type=Path, default=Path("egg-webnest-configured.json"))
     args = parser.parse_args()
     try:

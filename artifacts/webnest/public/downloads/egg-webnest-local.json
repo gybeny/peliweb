@@ -1,0 +1,34 @@
+{
+  "_comment": "Local Wings image: build webnest-runtime:php84 on the SAME node first. The leading ~ disables registry pulling; it is not part of the Docker build tag.",
+  "meta": {
+    "version": "PLCN_v3",
+    "update_url": null
+  },
+  "uuid": "c8ec11fa-f051-48ba-a46e-f89d8c1e7c72",
+  "exported_at": "2026-11-22T00:00:00+00:00",
+  "name": "WebNest · nginx + PHP 8.4",
+  "author": "iHyro",
+  "description": "WebNest · PHP 8.4-FPM + nginx + protocol-v1 supervisor. Saját WebNest runtime szükséges; tetszőleges PHP image nem kompatibilis.",
+  "features": [],
+  "docker_images": {
+    "WebNest PHP 8.4": "~webnest-runtime:php84"
+  },
+  "file_denylist": [],
+  "startup_commands": {
+    "WebNest": "python3 -u /opt/webnest/manager.py"
+  },
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\":[\"WebNest ready\"],\"strip_ansi\":false}",
+    "logs": "{\"custom\":false,\"location\":\"logs/latest.log\"}",
+    "stop": "^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/sh\nset -eu\numask 022\nROOT=\"${WEBNEST_INSTALL_ROOT:-/mnt/server}\"\nSTEP=volume\nfail() { printf '[WebNest] HIBA: %s\\n' \"$*\" >&2; exit 1; }\n[ -d \"$ROOT\" ] || fail 'A szerver kotete nem erheto el.'\n[ ! -L \"$ROOT\" ] || fail 'A szerver kotete nem lehet symlink.'\nfor relative in webnest sites sites/default sites/default/public; do\n    [ ! -L \"$ROOT/$relative\" ] || fail \"Symlink konyvtar nem tamogatott: $relative\"\n    mkdir -p \"$ROOT/$relative\"\ndone\nREPORT=\"$ROOT/webnest/INSTALLATION.txt\"\n[ ! -L \"$REPORT\" ] || fail 'A telepitesi jelentest symlink helyere nem irjuk.'\nreport_failure() { code=$?; if [ \"$code\" -ne 0 ]; then printf 'WebNest telepites: SIKERTELEN\\nLepes: %s\\nExit code: %s\\n' \"$STEP\" \"$code\" > \"$REPORT\"; fi; }\ntrap report_failure EXIT\nSTEP=write-check\nCHECK=\"$ROOT/webnest/.install-write-check-$$\"\n[ ! -e \"$CHECK\" ] && [ ! -L \"$CHECK\" ] || fail 'A proba fajl mar letezik.'\nprintf 'ok\\n' > \"$CHECK\"\nrm \"$CHECK\"\nSTEP=starter-page\nINDEX=\"$ROOT/sites/default/public/index.html\"\n[ ! -L \"$INDEX\" ] || fail 'A kezdo oldal symlink; valtoztatas nem tortent.'\nif [ ! -e \"$INDEX\" ]; then\n    printf '%s\\n' '<!doctype html><html lang=\"hu\"><meta charset=\"utf-8\"><title>WebNest</title><h1>A WebNest konyvtarai elkeszultek.</h1><p>A futtatashoz kulon WebNest runtime image szukseges.</p></html>' > \"$INDEX\"\nfi\nSTEP=done\nprintf 'WebNest telepites: SIKERES\\nA konyvtarak es az irasi jogosultsag ellenorizve.\\nMeglevo weboldalfajlokat nem irtunk felul.\\nEz NEM bizonyitja a runtime image letolthetoseget vagy az elindulast.\\n' > \"$REPORT\"\nprintf '[WebNest] A fajlok elokeszitese sikeres. Allapotfajl: webnest/INSTALLATION.txt\\n'\n",
+      "container": "alpine:3.22",
+      "entrypoint": "/bin/sh"
+    }
+  },
+  "variables": []
+}

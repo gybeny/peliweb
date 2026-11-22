@@ -83,6 +83,17 @@ class EggTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             configurator.configure(EGG, "registry.example.org/webnest/runtime:php84")
 
+    def test_local_wings_reference_accepted(self):
+        result = configurator.configure(EGG, "~webnest-runtime:php84")
+        self.assertEqual(list(result["docker_images"].values()), ["~webnest-runtime:php84"])
+        self.assertEqual(result["scripts"]["installation"]["container"], "alpine:3.22")
+        self.assertIn("SAME node", result["_comment"])
+
+    def test_local_marker_does_not_bypass_validation(self):
+        for image in ("~~webnest-runtime:php84", "~registry.example.org/runtime:php84", "~", "~runtime"):
+            with self.subTest(image=image), self.assertRaises(ValueError):
+                configurator.configure(EGG, image)
+
     def test_configurator_rejects_credentials_and_missing_tag(self):
         for image in ("https://ghcr.io/owner/runtime:php84", "user:password@registry/runtime:php84", "ghcr.io/owner/runtime", "image with space:tag"):
             with self.subTest(image=image), self.assertRaises(ValueError):

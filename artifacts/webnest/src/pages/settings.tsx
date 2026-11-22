@@ -33,6 +33,7 @@ export default function Settings() {
     { href: `${base}downloads/webnest-plugin.zip`, icon: Download, t: "Natív Pelican bővítmény", d: "webnest-plugin.zip · Pelican 1.0.0-rc.4" },
     { href: `${base}downloads/webnest-runtime.zip`, icon: Package, t: "Runtime csomag (kötelező)", d: "webnest-runtime.zip · Dockerfile, manager, Caddy példa" },
     { href: `${base}downloads/egg-webnest.json`, icon: FileJson, t: "WebNest egg sablon", d: "PLCN_v3 · runtime image beállítása kötelező" },
+    { href: `${base}downloads/egg-webnest-local.json`, icon: FileJson, t: "Helyi Wings egg", d: "~webnest-runtime:php84 · előbb helyi build szükséges" },
     { href: `${base}downloads/TELEPITES.md`, icon: BookOpen, t: "Telepítési útmutató", d: "TELEPITES.md" },
     { href: `${base}downloads/SHA256SUMS`, icon: Hash, t: "Ellenőrzőösszegek", d: "SHA256SUMS" },
   ];
@@ -55,7 +56,7 @@ export default function Settings() {
       <div className="grid lg:grid-cols-2 gap-5">
         <Panel title="Telepítés a Pelican Panelre">
           <ol className="space-y-2 text-sm list-decimal pl-4 marker:text-primary marker:font-mono mb-4">
-            <li>Építsd meg és töltsd fel a saját runtime image-et a <span className="font-mono">webnest-runtime.zip</span> Dockerfile-jából — kész image nincs publikálva.</li>
+            <li>Építsd meg a saját runtime image-et a <span className="font-mono">webnest-runtime.zip</span> Dockerfile-jából. Helyi Wings buildhez nem kell registry; máskülönben töltsd fel a saját registrydbe. Kész image nincs publikálva.</li>
             <li>A fenti űrlapon add meg az elkészített runtime image nevét, és töltsd le a beállított egget. A sablon példacíme önmagában nem működik.</li>
             <li>Importáld az <span className="font-mono">egg-webnest-configured.json</span> fájlt (Admin › Eggs). Meglévő eggnél az adatokat frissítsd; szervert ne törölj.</li>
             <li>Importáld/telepítsd a bővítmény zipet (lásd parancs).</li>

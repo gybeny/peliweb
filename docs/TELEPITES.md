@@ -17,7 +17,8 @@ megjelenése nem teljesen azonos a bemutatóval.
 - Először külön tesztpanelen, üres tesztszerverrel próbáld ki. Meglévő
   webhelyet ne állíts át az első telepítés részeként.
 - Nincs előre publikált WebNest konténerimage. A runtime forrását megkapod,
-  de saját image-et kell buildelned és registrybe feltöltened.
+  de saját image-et kell buildelned. Közvetlenül a Wings gépen készített
+  helyi image-hez nem kell registry; más gépre terjesztéshez fel kell tölteni.
 - A plugin a Pelican meglévő bejelentkezését és szerverjogosultságait használja.
   Nem kell új felhasználókezelés vagy panel API-kulcs.
 
@@ -28,6 +29,7 @@ megjelenése nem teljesen azonos a bemutatóval.
 | `webnest-plugin.zip` | Közvetlenül importálható `webnest/` pluginmappa |
 | `webnest-runtime.zip` | Dockerfile, Python supervisor, PHP-FPM konfiguráció, egg és Caddy példa |
 | `egg-webnest.json` | Natív PLCN_v3 egg **sablon**; saját runtime image nélkül nem futtatható |
+| `egg-webnest-local.json` | Wings helyi image: `~webnest-runtime:php84`; előbb ugyanazon a node-on kell buildelni |
 | `SHA256SUMS` | A csomagok ellenőrzőösszege |
 
 ## Felépítés
@@ -50,7 +52,49 @@ Az edge el kell érje minden érintett node allocation címét.
 
 ## 1. Runtime image elkészítése
 
-Ezt **a saját Docker build gépeden**, nem a Pelican webes konzoljában futtasd.
+### A. SSH a Wings gépre: registry nélkül
+
+Ez a legegyszerűbb javítás, ha a szerver jelenlegi image-e
+`registry.example.org/webnest/runtime:php84`. A node **SSH termináljában**,
+nem a Pelican szerverkonzoljában futtasd. A runtime ZIP-et előbb másold erre
+a gépre, majd abba a mappába lépj, ahol a ZIP található:
+
+```bash
+builddir="$(mktemp -d /tmp/webnest-build.XXXXXX)"
+unzip -n webnest-runtime.zip -d "$builddir" &&
+sudo docker build --pull -t webnest-runtime:php84 "$builddir/runtime" &&
+sudo docker image inspect webnest-runtime:php84 --format '{{.Id}}'
+```
+
+Docker, unzip, internetkapcsolat és elegendő szabad tárhely szükséges.
+A csomag külön ideiglenes mappába kerül; a parancsok nem törlik a szerver
+weboldalfájljait. A build erőforrást és lemezterületet használ.
+
+**Csak sikeres build után:**
+
+1. A meglévő WebNest egget az Admin felületen frissítsd a mellékelt
+   `egg-webnest-local.json` fájlból. A runtime ZIP-ben is megtalálod:
+   `runtime/egg-webnest-local.json`.
+2. A már létező szerver **Startup / Indítási beállítások → Docker Image**
+   mezőjében válaszd ki pontosan ezt: `~webnest-runtime:php84`.
+3. Indítsd a szervert. Emiatt ne töröld és ne telepítsd újra.
+
+A **Docker build tagje `webnest-runtime:php84`, a Pelicanben beállítandó
+érték `~webnest-runtime:php84`**. A `~` nem része a Docker image nevének:
+a Wings ezzel tiltja le a registryből történő pullt, majd levágja a jelet a
+konténer létrehozásakor. Ez a működés a Wings hivatalos rc.1–rc.3
+forrásában ellenőrzött, például:
+https://github.com/pelican-dev/wings/blob/v1.0.0-rc.3/environment/docker/container.go
+Az itt végzett forrásellenőrzés nem tényleges Docker/Wings futtatási teszt.
+
+A buildnek **ugyanazon a Docker daemonon** kell megtörténnie, amelyet a
+Wings használ. Több node vagy szerverköltöztetés esetén minden érintett
+node-on szükséges az image. Ne töröld image-takarításkor; frissítésekhez
+időnként építsd újra. Ez a fejlesztőkörnyezet nem futtat Docker buildet.
+
+### B. Saját registry használata
+
+Ezt a saját Docker build gépeden, nem a Pelican webes konzoljában futtasd.
 
 ```bash
 unzip webnest-runtime.zip
